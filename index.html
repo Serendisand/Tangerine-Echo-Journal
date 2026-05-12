@@ -1153,14 +1153,19 @@
                         throw new Error(`读取列表失败: ${err.message}`);
                     }
 
+                    const results = await Promise.allSettled(
+                        fileNames.map(fileName => loadMarkdownAndRender(fileName))
+                    );
+
                     const loadedPosts = [];
 
-                    for (const fileName of fileNames) {
-                        try {
-                            const post = await loadMarkdownAndRender(fileName);
-                            loadedPosts.push(post);
-                        } catch (err) {
-                            console.warn(`跳过文件 ${fileName}:`, err);
+                    for (let i = 0; i < results.length; i++) {
+                        const r = results[i];
+
+                        if (r.status === 'fulfilled') {
+                            loadedPosts.push(r.value);
+                        } else {
+                            console.warn(`跳过文件 ${fileNames[i]}:`, r.reason);
                         }
                     }
 
