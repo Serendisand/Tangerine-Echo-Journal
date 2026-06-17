@@ -63,9 +63,9 @@ jobs:
           cd docs
           > list.txt
           
-          for file in $(ls -1 *.md 2>/dev/null | sort); do
+          while IFS= read -r file; do
             echo "$file" >> list.txt
-          done
+          done < <(ls -1 *.md 2>/dev/null | sort)
           
           echo "已生成 list.txt："
           cat list.txt
