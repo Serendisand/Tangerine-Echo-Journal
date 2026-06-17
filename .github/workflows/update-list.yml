@@ -18,18 +18,21 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-          ref: ${{ github.head_ref || github.ref_name }}
+          fetch-depth: 0  # 获取完整历史以便获取正确的 commit 日期
 
       - name: 重命名所有 .md 文件，在文件名末尾添加最后修改日期
         run: |
           cd docs
           
-          for old_file in *.md; do
+          # 使用数组和 find 来处理文件名中的空格
+          find . -maxdepth 1 -name "*.md" -type f | while IFS= read -r old_file; do
+            # 去掉 ./ 前缀
+            old_file="${old_file#./}"
             [ -f "$old_file" ] || continue
             
             # 获取该文件的最后 commit 日期（ISO 格式 YYYY-MM-DD）
-            last_date=$(git log -1 --format=%as -- "$old_file" 2>/dev/null)
+            # 使用 --follow 来跟踪重命名历史
+            last_date=$(git log -1 --format=%as --follow -- "$old_file" 2>/dev/null || true)
             
             # 如果 git log 没取到（新文件未提交），用当前日期
             if [ -z "$last_date" ]; then
@@ -51,9 +54,15 @@ jobs:
             # 新文件名
             new_file="${clean_name}_${last_date}.md"
             
-            # 重命名
+            # 重命名 - 使用 mv 而不是 git mv，然后手动 git add
             if [ "$old_file" != "$new_file" ]; then
-              git mv "$old_file" "$new_file"
+              # 如果新文件已存在，先删除旧文件
+              if [ -f "$new_file" ] && [ "$old_file" != "$new_file" ]; then
+                echo "⚠️  目标文件已存在，跳过: $old_file → $new_file"
+                continue
+              fi
+              
+              mv "$old_file" "$new_file"
               echo "✅ 重命名: $old_file → $new_file"
             fi
           done
@@ -61,19 +70,30 @@ jobs:
       - name: 生成 list.txt
         run: |
           cd docs
+          
+          # 生成文件列表（仅文件名，不含路径）
           > list.txt
           
-          while IFS= read -r file; do
+          # 按修改时间排序，最新的在前
+          for file in *.md; do
+            [ -f "$file" ] || continue
             echo "$file" >> list.txt
-          done < <(ls -1 *.md 2>/dev/null | sort)
+          done
           
-          echo "已生成 list.txt："
+          # 排序并去重
+          sort -u -o list.txt list.txt
+          
+          echo "已生成 list.txt，包含 $(wc -l < list.txt) 个文件："
           cat list.txt
 
-      - name: 检查是否有变更
-        id: check
+      - name: 添加变更到暂存区
         run: |
-          if git diff --cached --quiet && git diff --quiet; then
+          cd docs
+          # 添加所有 .md 文件和 list.txt
+          git add *.md list.txt 2>/dev/null || true
+          
+          # 检查是否有变更
+          if git diff --cached --quiet; then
             echo "changed=false" >> $GITHUB_OUTPUT
             echo "无变更需要提交"
           else
@@ -81,12 +101,12 @@ jobs:
             echo "有以下变更："
             git status --short
           fi
+        id: check
 
       - name: 提交变更
         if: steps.check.outputs.changed == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/
           git commit -m "chore: 自动更新文件名（添加最后修改日期） [skip ci]"
           git push
