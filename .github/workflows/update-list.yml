@@ -3,7 +3,7 @@ name: 自动更新文件名和文章列表
 on:
   push:
     paths:
-      - 'docs/**/*.md'
+      - 'docs/**/*.md'  # 确保路径正确
     branches:
       - main
       - master
@@ -14,46 +14,51 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write  # 添加这个权限
+    
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: ${{ github.head_ref || github.ref_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}  # 添加token
 
-      - name: 重命名所有 .md 文件，在文件名末尾添加最后修改日期
+      - name: 重命名所有 .md 文件
         run: |
-          cd docs
+          cd docs || exit 1
           
-          for old_file in *.md; do
-            [ -f "$old_file" ] || continue
+          # 使用find递归查找所有.md文件
+          find . -name "*.md" -type f | while read -r old_file; do
+            # 跳过当前目录下的list.txt
+            [[ "$old_file" == "./list.txt" ]] && continue
             
-            # 获取该文件的最后 commit 日期（ISO 格式 YYYY-MM-DD）
+            # 获取文件的最后commit日期
             last_date=$(git log -1 --format=%as -- "$old_file" 2>/dev/null)
             
-            # 如果 git log 没取到（新文件未提交），用当前日期
             if [ -z "$last_date" ]; then
               last_date=$(date +%Y-%m-%d)
             fi
             
-            # 提取文件名（不含 .md 后缀）
-            base_name="${old_file%.md}"
+            # 获取文件名（不含路径）
+            filename=$(basename "$old_file")
+            dirname=$(dirname "$old_file")
+            base_name="${filename%.md}"
             
-            # 检查文件名是否已包含该日期
+            # 检查是否已包含日期
             if echo "$base_name" | grep -q "_$last_date$"; then
               echo "⏭️  $old_file 已包含日期 $last_date，跳过"
               continue
             fi
             
-            # 移除已有的 _YYYY-MM-DD 后缀（如果存在）
+            # 移除已有的日期后缀
             clean_name=$(echo "$base_name" | sed 's/_[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}$//')
             
-            # 新文件名
-            new_file="${clean_name}_${last_date}.md"
+            new_file="${dirname}/${clean_name}_${last_date}.md"
             
-            # 重命名
+            # 使用mv代替git mv避免冲突
             if [ "$old_file" != "$new_file" ]; then
-              git mv "$old_file" "$new_file"
+              mv "$old_file" "$new_file"
               echo "✅ 重命名: $old_file → $new_file"
             fi
           done
@@ -61,32 +66,23 @@ jobs:
       - name: 生成 list.txt
         run: |
           cd docs
-          > list.txt
-          
-          for file in $(ls -1 *.md 2>/dev/null | sort); do
-            echo "$file" >> list.txt
-          done
-          
+          # 使用find查找所有.md文件并排序
+          find . -name "*.md" -type f | sort > list.txt
           echo "已生成 list.txt："
           cat list.txt
 
-      - name: 检查是否有变更
-        id: check
-        run: |
-          if git diff --cached --quiet && git diff --quiet; then
-            echo "changed=false" >> $GITHUB_OUTPUT
-            echo "无变更需要提交"
-          else
-            echo "changed=true" >> $GITHUB_OUTPUT
-            echo "有以下变更："
-            git status --short
-          fi
-
-      - name: 提交变更
-        if: steps.check.outputs.changed == 'true'
+      - name: 检查并提交变更
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # 添加所有变更
           git add docs/
-          git commit -m "chore: 自动更新文件名（添加最后修改日期） [skip ci]"
-          git push
+          
+          # 检查是否有变更
+          if git diff --cached --quiet; then
+            echo "无变更需要提交"
+          else
+            git commit -m "chore: 自动更新文件名（添加最后修改日期） [skip ci]"
+            git push
+          fi
