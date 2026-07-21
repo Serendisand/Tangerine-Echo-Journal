@@ -59,13 +59,11 @@
         .hero-section {
             position: relative;
             min-height: 100svh;
-            background-image:
-                linear-gradient(180deg, rgba(24, 43, 35, 0.08), rgba(255, 253, 247, 0.12) 62%, rgba(247, 251, 240, 0.92)),
-                url('background.png'),
-                linear-gradient(135deg, #d9f0e8 0%, #fff2df 52%, #c9e8dc 100%);
-            background-size: cover, cover, cover;
+            background-image: url('https://uapis.cn/api/v1/random/image?category=acg');
+            background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
+            background-color: #eef8f1;
             display: grid;
             place-items: end center;
             isolation: isolate;
@@ -96,6 +94,19 @@
             right: 10vw;
             top: 12vh;
             background: radial-gradient(circle, rgba(159, 215, 194, 0.34), transparent 66%);
+        }
+
+        .hero-logo {
+            position: absolute;
+            top: clamp(1.1rem, 3vw, 2rem);
+            left: clamp(1.1rem, 3vw, 2.4rem);
+            z-index: 2;
+            color: #273b35;
+            font-size: clamp(1.35rem, 2.6vw, 2.2rem);
+            font-weight: 900;
+            letter-spacing: -0.04em;
+            line-height: 1;
+            text-shadow: 0 2px 14px rgba(255, 255, 255, 0.72);
         }
 
         .scroll-cue {
@@ -694,6 +705,7 @@
 
 <body>
     <section class="hero-section" aria-label="纯图片首页封面">
+        <div class="hero-logo">柑音手账</div>
         <a class="scroll-cue" href="#journal" aria-label="下拉查看文章"><span>⌄</span></a>
     </section>
 
@@ -712,9 +724,8 @@
                 <section v-if="!activePost" class="list-view" aria-label="文章列表">
                     <div class="section-head">
                         <div>
-                            <div class="eyebrow">Fresh Journal</div>
+                            <div class="eyebrow">Tangerine Echo Journal</div>
                             <h1 class="section-title">柑音手帐</h1>
-                            <p class="section-note">下拉以后再进入文字区。列表只保留标题和标签，像一叠轻轻展开的便签。</p>
                         </div>
                         <div class="count-pill">{{ filteredPosts.length }} 篇</div>
                     </div>
@@ -808,7 +819,7 @@
         </main>
     </div>
 
-    <footer>🍃 柑音手账 · Fresh & Soft Journal 🍊</footer>
+    <footer>柑音手账</footer>
 
     <script>
         const { createApp, ref, computed, onMounted, nextTick, watch } = Vue;
