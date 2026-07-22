@@ -885,7 +885,12 @@
                 }
 
                 function getDocUrl(fileName) {
-                    return getAssetUrl(`docs/${encodeURIComponent(fileName)}`);
+                    const encodedFileName = fileName
+                        .split('/')
+                        .map(part => encodeURIComponent(part))
+                        .join('/');
+
+                    return getAssetUrl(`docs/${encodedFileName}`);
                 }
 
                 function resolvePostAssetUrl(src, fileName) {
@@ -1162,7 +1167,7 @@
 
                         fileNames = text
                             .split(/\r?\n/)
-                            .map(line => line.trim())
+                            .map(line => line.trim().replace(/^\.\//, ''))
                             .filter(line => line.length > 0 && line.endsWith('.md'));
 
                         if (fileNames.length === 0) {
