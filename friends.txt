@@ -1,0 +1,3 @@
+# 格式：名称 图标url 网站url
+# 名称中不要带空格；每行一个友链。
+柑音 https://uapis.cn/api/v1/random/image?category=acg https://serendisand.github.io/Tangerine-Echo-Journal/
