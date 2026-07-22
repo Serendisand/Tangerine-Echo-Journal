@@ -72,7 +72,7 @@ jobs:
         run: |
           cd docs
           # 使用 find 查找所有 .md 文件并排序
-          find . -name "*.md" -type f | sort > list.txt
+          find . -name "*.md" -type f | sed 's#^./##' | sort > list.txt
           echo "已生成 list.txt："
           cat list.txt
 
