@@ -130,7 +130,7 @@ CLANNAD_2026-04-26.md
 每行一个 Markdown 文件名。  
 如果文章没有写进 `list.txt`，首页就不会显示它。
 
-## 🤖 自动工作流
+## 自动工作流
 
 项目包含 GitHub Actions 工作流：
 
