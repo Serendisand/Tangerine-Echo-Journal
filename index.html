@@ -528,28 +528,39 @@
 
         .friend-row {
             min-width: 0;
-            overflow-x: auto;
-            overscroll-behavior-inline: contain;
-            scrollbar-width: none;
-        }
-
-        .friend-row::-webkit-scrollbar {
-            display: none;
+            overflow: hidden;
         }
 
         .friend-track {
             display: flex;
             width: max-content;
             gap: 0.8rem;
-            padding: 0.15rem 0.1rem 0.3rem;
+            padding: 0.15rem 0.1rem 0.3rem 100%;
+            animation: friendScroll var(--friend-duration, 24s) linear infinite;
+            will-change: transform;
         }
 
         .friend-row:nth-child(2) .friend-track {
-            transform: translateX(clamp(-72px, -5vw, 0px));
+            --friend-duration: 28s;
+            animation-direction: reverse;
         }
 
         .friend-row:nth-child(3) .friend-track {
-            transform: translateX(clamp(-36px, -3vw, 0px));
+            --friend-duration: 32s;
+        }
+
+        .friend-marquee:hover .friend-track {
+            animation-play-state: paused;
+        }
+
+        @keyframes friendScroll {
+            from {
+                transform: translateX(0);
+            }
+
+            to {
+                transform: translateX(-100%);
+            }
         }
 
         .friend-card {
