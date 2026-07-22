@@ -395,8 +395,19 @@
             line-height: 1.28;
             letter-spacing: -0.03em;
             color: #263d36;
-            margin-bottom: 0.75rem;
+            margin-bottom: 0.45rem;
             word-break: break-word;
+        }
+
+        .post-date,
+        .reader-date {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            color: #6d8980;
+            font-size: 0.84rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
         }
 
         .post-tags {
@@ -782,6 +793,7 @@
                         >
                             <span>
                                 <h2 class="post-title">{{ post.title }}</h2>
+                                <time class="post-date" v-if="post.date" :datetime="post.isoDate">{{ post.date }}</time>
                                 <span class="post-tags" v-if="post.tags && post.tags.length">
                                     <span class="post-tag" v-for="tag in post.tags" :key="tag"># {{ tag }}</span>
                                 </span>
@@ -810,6 +822,7 @@
                         <header class="reader-header">
                             <div class="eyebrow">Reading</div>
                             <h1 class="reader-title">{{ activePost.title }}</h1>
+                            <time class="reader-date" v-if="activePost.date" :datetime="activePost.isoDate">{{ activePost.date }}</time>
                             <div class="post-tags" v-if="activePost.tags && activePost.tags.length">
                                 <span class="post-tag" v-for="tag in activePost.tags" :key="tag"># {{ tag }}</span>
                             </div>
@@ -1001,8 +1014,10 @@
                     const match = filename.match(/_(\d{4})-(\d{2})-(\d{2})\.md$/);
 
                     if (match) {
+                        const isoDate = `${match[1]}-${match[2]}-${match[3]}`;
                         return {
                             display: `${match[1]}年${match[2]}月${match[3]}日`,
+                            isoDate,
                             timestamp: new Date(
                                 parseInt(match[1]),
                                 parseInt(match[2]) - 1,
@@ -1014,8 +1029,10 @@
                     const fallbackMatch = filename.match(/(\d{4})-(\d{2})-(\d{2})/);
 
                     if (fallbackMatch) {
+                        const isoDate = `${fallbackMatch[1]}-${fallbackMatch[2]}-${fallbackMatch[3]}`;
                         return {
                             display: `${fallbackMatch[1]}年${fallbackMatch[2]}月${fallbackMatch[3]}日`,
+                            isoDate,
                             timestamp: new Date(
                                 parseInt(fallbackMatch[1]),
                                 parseInt(fallbackMatch[2]) - 1,
@@ -1027,6 +1044,7 @@
                     const now = Date.now();
                     return {
                         display: '',
+                        isoDate: '',
                         timestamp: now
                     };
                 }
@@ -1127,6 +1145,7 @@
                         fileName,
                         title,
                         date: dateInfo.display,
+                        isoDate: dateInfo.isoDate,
                         timestamp: dateInfo.timestamp,
                         html,
                         tags,
