@@ -528,33 +528,28 @@
 
         .friend-row {
             min-width: 0;
-            overflow: hidden;
+            overflow-x: auto;
+            overscroll-behavior-inline: contain;
+            scrollbar-width: none;
+        }
+
+        .friend-row::-webkit-scrollbar {
+            display: none;
         }
 
         .friend-track {
             display: flex;
             width: max-content;
             gap: 0.8rem;
-            animation: friendScroll var(--friend-duration, 34s) linear infinite;
+            padding: 0.15rem 0.1rem 0.3rem;
         }
 
         .friend-row:nth-child(2) .friend-track {
-            --friend-duration: 40s;
-            animation-direction: reverse;
+            transform: translateX(clamp(-72px, -5vw, 0px));
         }
 
         .friend-row:nth-child(3) .friend-track {
-            --friend-duration: 46s;
-        }
-
-        .friend-marquee:hover .friend-track {
-            animation-play-state: paused;
-        }
-
-        @keyframes friendScroll {
-            to {
-                transform: translateX(-50%);
-            }
+            transform: translateX(clamp(-36px, -3vw, 0px));
         }
 
         .friend-card {
@@ -1188,19 +1183,6 @@
                     }
                 }
 
-                function repeatFriendRow(row) {
-                    if (!row.length) return [];
-
-                    const base = [];
-                    const targetBaseLength = Math.max(row.length, 6);
-
-                    while (base.length < targetBaseLength) {
-                        base.push(...row);
-                    }
-
-                    return base.concat(base);
-                }
-
                 function splitFriendRows(list) {
                     if (!list.length) return [];
 
@@ -1210,13 +1192,7 @@
                         rows[index % 3].push(friend);
                     });
 
-                    return rows.map((row, index) => {
-                        const source = row.length
-                            ? row
-                            : list.slice(index).concat(list.slice(0, index));
-
-                        return repeatFriendRow(source);
-                    });
+                    return rows.filter(row => row.length);
                 }
 
                 function resolvePostAssetUrl(src, fileName) {
